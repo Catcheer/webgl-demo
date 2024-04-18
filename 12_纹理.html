@@ -96,7 +96,7 @@
         var u_Sampler = gl.getUniformLocation(gl.program,'u_Sampler');
 
         const img = new Image();
-        img.src = './imgs/aa.jpg'
+        img.src = './imgs/aa.png'
         img.onload = function () {
             //对问题图像进行y轴反转
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,1);
