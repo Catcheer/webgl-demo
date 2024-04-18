@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制一个点</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
+   
+</head>
+
+<body>
+    <canvas id="myCanvas" width="600" height="400"></canvas>
+    
+    <script type="x-shader/x-vertext" id="x-vertext">
+        //attribute vec4 a_position;
+        void main(){
+            gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+            gl_PointSize = 10.0;
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="x-fragment">
+       // precision mediump float;
+       // uniform vec4 u_color;
+        void main(){
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    </script>
+    <script type="module">
+         import { initShaders } from './js/util.js';
+        const myCanvas = document.querySelector('#myCanvas')
+        const gl = myCanvas.getContext('webgl');
+
+        initShaders(gl,'#x-vertext', '#x-fragment');
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.POINTS, 0, 1);
+
+       
+   
+
+
+    </script>
+</body>
+
+</html>

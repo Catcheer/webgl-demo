@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>闪闪的星星</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        #myCanvas {
+            background: url('./imgs/sky_bg.png') top center;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <canvas id="myCanvas" width="1200" height="500"></canvas>
+
+    <script type="x-shader/x-vertext" id="x-vertext">
+        attribute vec4 a_position;
+        attribute float a_size;
+        void main(){
+            gl_Position = a_position;
+            gl_PointSize = a_size;
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="x-fragment">
+        precision mediump float;
+        uniform vec4 u_color;
+        void main(){
+            float dist = distance(gl_PointCoord, vec2(0.5, 0.5));
+            if(dist >= 0.5){
+                discard;
+            }else{
+                gl_FragColor = u_color;
+            }
+           
+        }
+    </script>
+    <script type="module">
+        import { initShaders } from './js/util.js';
+        import Compose from './js/Compose.js';
+        import Track from './js/Track.js';
+        const myCanvas = document.querySelector('#myCanvas')
+        const gl = myCanvas.getContext('webgl');
+        //开启片元的合成功能
+        gl.enable(gl.BLEND);
+        //设置片元的合成方式
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+
+        initShaders(gl, '#x-vertext', '#x-fragment');
+        const a_position = gl.getAttribLocation(gl.program, 'a_position')
+        const u_color = gl.getUniformLocation(gl.program, 'u_color')
+        const a_size = gl.getAttribLocation(gl.program, 'a_size')
+        // gl.vertexAttrib3f(a_position,0.5,0.5,0.0)
+
+        const compose = new Compose();
+        const arrs = [];
+
+        myCanvas.addEventListener('click', (e) => {
+            const x = e.clientX
+            const y = e.clientY
+            const rect = e.target.getBoundingClientRect()
+            const dx = (x - rect.left) / rect.width * 2 - 1
+            const dy = (rect.height - y) / rect.height * 2 - 1
+            const a = 1
+            const s = Math.random() * 5 
+
+            const obj = {
+                dx,
+                dy,
+                s,
+                a,
+            }
+            const track = new Track(obj)
+            track.start = new Date()
+            track.timeLen = 2000
+            track.loop = true
+            track.keyMap = new Map([
+                [
+                    'a',
+                    [[500, a],
+                    [1000, 0],
+                    [1500, a]]
+                ]
+            ])
+
+            compose.add(track)
+            // console.log(alpha)
+
+            arrs.push(obj)
+
+
+        });
+
+
+        (function () {
+
+            function animate() {
+
+                compose.update(new Date())
+                draw()
+                requestAnimationFrame(animate)
+            }
+            animate()
+        })()
+
+        // gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        // gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+        function draw() {
+            // gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            // gl.clear(gl.COLOR_BUFFER_BIT);
+           
+
+            for (let i = 0; i < arrs.length; i++) {
+                const {dx, dy, s, a} = arrs[i]
+                gl.vertexAttrib2f(a_position, dx, dy);
+                gl.vertexAttrib1f(a_size, s)
+                gl.uniform4fv(u_color, new Float32Array([0.7, 0.8, 1.0, a]));
+
+                gl.drawArrays(gl.POINTS, 0, 1);
+            }
+
+        }
+
+
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>

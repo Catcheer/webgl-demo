@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>狮子座</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="300" height="300"></canvas>
+
+    <script type="x-vertext/shader" id="x-vertext">
+        attribute vec4 a_Attr;
+        varying float v_Alpha;
+        void main(){
+            gl_Position = vec4(a_Attr.x,a_Attr.y,0.0,1.0);
+            gl_PointSize = a_Attr.z;
+            v_Alpha= a_Attr.w;
+        }
+    </script>
+
+    <script type="x-fragment/shader" id="x-fragment">
+        precision mediump float;
+        uniform bool u_IsPoints;
+        varying float v_Alpha;
+        void main(){
+            if(u_IsPoints){
+                float dist = distance(gl_PointCoord, vec2(0.5, 0.5));
+                if(dist >= 0.5){
+                    discard;
+                 }else{
+                    gl_FragColor = vec4(0.87, 0.91, 0, v_Alpha);
+                 }
+            }else{
+                gl_FragColor = vec4(0.87, 0.91, 0, v_Alpha);
+            }
+            
+           
+        }
+    </script>
+    <script type="module">
+        import { initShaders } from './js/util.js';
+        import Poly from './js/poly.js'
+        import Sky from './js/sky.js'
+        import Track from './js/Track.js'
+        import Compose from './js/Compose.js'
+
+        const myCanvas = document.querySelector('#myCanvas')
+        const gl = myCanvas.getContext('webgl');
+        initShaders(gl, '#x-vertext', '#x-fragment');
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+
+        //夜空
+        const sky = new Sky(gl)
+        //建立容器对象
+        const compose =new Compose()
+
+        let poly = null
+        let point =null 
+
+
+        myCanvas.oncontextmenu = function (e) {
+            return false
+        }
+
+        myCanvas.addEventListener('mousedown', (e) => {
+            if (e.button == 2) {
+               poly && popVertices()
+            } else {
+                const { x, y } = getGlPos(e)
+                if (poly) {
+                    addVertices(x,y)
+                   
+                } else {
+                    createPoly(x, y)
+                }
+                
+                
+            }
+            render()
+        })
+
+        myCanvas.addEventListener('mousemove', (e) => {
+            let {x,y}= getGlPos(e)
+            point = hoverPoint(x,y)
+            myCanvas.style.cursor = point?'pointer':'default'
+               if(poly){
+                const { x, y } = getGlPos(e)
+                // poly.addVertices(x, y)
+                // poly.setVertices(poly.count-1,x,y)
+                // render()
+                const obj = poly.geoData[poly.geoData.length-1]
+                obj.x= x
+                obj.y = y
+               }
+        })
+
+        function popVertices() {
+           poly.geoData.pop()
+           compose.children.pop()
+            poly=null
+        }
+
+        function addVertices(x,y){
+            let {geoData} =poly
+            if(point){
+                geoData[geoData.length-1]= point
+            }
+            let obj = {x,y,pointSize:randomSize(),alpha:1}
+            geoData.push(obj)
+            createTrack(obj)
+        }
+
+        function createPoly(x, y) {
+            let o1 = point?point:{x,y,pointSize:randomSize(),alpha:1}
+            let o2 = {x,y,pointSize:randomSize(),alpha:1}
+            console.log(o1,o2);
+            poly = new Poly({
+                circleDot:true,
+                size:4,
+                attrName:'a_Attr',
+                geoData: [o1,o2],
+                types: ['POINTS', 'LINE_STRIP']
+            })
+            sky.add(poly)
+            createTrack(o1)
+            createTrack(o2)
+        }
+        function createTrack(obj){
+            const {pointSize}=obj
+            const track = new Track(obj)
+            track.start = new Date()
+            track.timeLen = 2000
+            track.loop = true
+            track.keyMap=new Map([
+                [
+                    'alpha',
+                    [
+                        [500,1],
+                        [1000,0],
+                        [1500,1],
+                    ]
+                ],
+                [
+                    'pointSize',
+                    [
+                        [500,pointSize],
+                        [1000,0],
+                        [1500,pointSize],
+                    ]
+                ]
+            ])
+            compose.add(track)
+        }
+
+        function hoverPoint(mx,my){
+            for(let {geoData} of sky.children){
+                for(let obj of geoData){
+                    if(poly && obj=== poly.geoData[poly.geoData.length-1]){
+                        continue;
+                    }
+                    const delta ={
+                        x:mx-obj.x,
+                        y:my-obj.y
+                    }
+                    const {x,y}= glTocssPos(delta)
+                    const dis =x * x + y * y
+                    if(dis<100){
+                        return obj
+                    }
+                    return null
+
+                }
+            } 
+        }
+        function render(){
+            gl.clear(gl.COLOR_BUFFER_BIT)
+            sky.draw()
+        }
+        function getGlPos(e) {
+            const { clientX, clientY } = e
+            return {
+                x: clientX / myCanvas.clientWidth * 2 - 1,
+                y: 1 - clientY / myCanvas.clientHeight * 2
+            }
+        }
+        function glTocssPos({x,y}){
+            return {
+                x:x/2*myCanvas.clientWidth,
+                y:-y/2*myCanvas.clientHeight
+            }
+        }
+        function randomSize(){
+            return Math.random()*8+3
+        }
+
+        !(function ani(){
+            compose.update(new Date())
+            sky.updataVertices(['x','y','pointSize','alpha',])
+         
+            render()
+            requestAnimationFrame(ani)
+        })()
+
+      
+    </script>
+
+</body>
+
+</html>

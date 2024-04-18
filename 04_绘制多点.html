@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制多个点-批量处理</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="600" height="400"></canvas>
+
+    <script type="x-vertext/shader" id="x-vertext">
+        attribute vec4 a_position;
+        void main(){
+            gl_Position = a_position;
+           // gl_PointSize = 10.0;
+        }
+    </script>
+
+    <script type="x-fragment/shader" id="x-fragment">
+        precision mediump float;
+      
+        void main(){
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    </script>
+    <script type="module">
+        import { initShaders } from './js/util.js';
+        const myCanvas = document.querySelector('#myCanvas')
+        const gl = myCanvas.getContext('webgl');
+
+        initShaders(gl, '#x-vertext', '#x-fragment');
+        const a_position = gl.getAttribLocation(gl.program, 'a_position')
+        const vertexs = new Float32Array([
+           0.0,0.1,
+          -0.1,-0.1,
+          0.1,-0.1
+        ])
+
+        const buffer = gl.createBuffer()
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+        gl.bufferData(gl.ARRAY_BUFFER, vertexs,gl.STATIC_DRAW)
+        gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
+        gl.enableVertexAttribArray(a_position)
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+       
+    </script>
+</body>
+</html>

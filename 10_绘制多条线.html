@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制多条线</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="300" height="300"></canvas>
+
+    <script type="x-vertext/shader" id="x-vertext">
+        attribute vec4 a_position;
+        void main(){
+            gl_Position = a_position;
+            gl_PointSize = 10.0;
+        }
+    </script>
+
+    <script type="x-fragment/shader" id="x-fragment">
+        precision mediump float;
+        uniform bool u_IsPoints;
+        void main(){
+            if(u_IsPoints){
+                float dist = distance(gl_PointCoord, vec2(0.5, 0.5));
+                if(dist >= 0.5){
+                    discard;
+                 }else{
+                    gl_FragColor = vec4(1.0, 1.0, 0, 1.0);
+                 }
+            }else{
+                gl_FragColor = vec4(1.0, 1.0, 0, 1.0);
+            }
+            
+           
+        }
+    </script>
+    <script type="module">
+        import { initShaders } from './js/util.js';
+        import Poly from './js/poly.js'
+        import Sky from './js/sky.js'
+
+        const myCanvas = document.querySelector('#myCanvas')
+        const gl = myCanvas.getContext('webgl');
+        initShaders(gl, '#x-vertext', '#x-fragment');
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        const sky = new Sky(gl)
+
+        let poly = null
+
+
+        myCanvas.oncontextmenu = function (e) {
+            return false
+        }
+
+        myCanvas.addEventListener('mousedown', (e) => {
+            if (e.button == 2) {
+               poly && popVertices()
+            } else {
+                const { x, y } = getGlPos(e)
+                if (poly) {
+                    poly.addVertices(x, y)
+                } else {
+                    createPoly(x, y)
+                }
+                
+                
+            }
+            render()
+        })
+
+        myCanvas.addEventListener('mousemove', (e) => {
+               if(poly){
+                const { x, y } = getGlPos(e)
+                // poly.addVertices(x, y)
+                poly.setVertices(poly.count-1,x,y)
+                render()
+               }
+        })
+
+        function popVertices() {
+            poly.popVertices()
+            poly=null
+        }
+
+        function createPoly(x, y) {
+            poly = new Poly({
+                circleDot:true,
+                vertices: [x, y,x,y],
+                types: ['POINTS', 'LINE_STRIP']
+            })
+            sky.add(poly)
+        }
+
+        function render(){
+            gl.clear(gl.COLOR_BUFFER_BIT)
+            sky.draw()
+        }
+        function getGlPos(e) {
+            const { clientX, clientY } = e
+            return {
+                x: clientX / myCanvas.clientWidth * 2 - 1,
+                y: 1 - clientY / myCanvas.clientHeight * 2
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
