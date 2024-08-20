@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>helloPoint1</title>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="600" height="600"></canvas>
+
+    <script type="x-shader/x-vertext" id="vertexShader">
+
+        void main(){
+            gl_Position = vec4(0.5,0.0,0.0,1.0);
+            gl_PointSize = 20.0;
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="fragmentShader">
+        void main(){
+            gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+        }
+    </script>
+    <script>
+        let flag =true 
+        const myCanvas = document.querySelector('#myCanvas')
+        const gl = myCanvas.getContext('webgl');
+
+        const vertexShader = document.querySelector('#vertexShader').innerText;
+        const fragmentShader = document.querySelector('#fragmentShader').innerText;
+        const program = initShaders(gl, vertexShader, fragmentShader);
+
+
+
+        function initShaders(gl, vs, fs) {
+            const program = gl.createProgram();
+            const verObj = gl.createShader(gl.VERTEX_SHADER);
+            const frageObj = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(verObj, vs);
+            gl.shaderSource(frageObj, fs);
+            gl.compileShader(verObj);
+            gl.compileShader(frageObj);
+            gl.attachShader(program, verObj);
+            gl.attachShader(program, frageObj);
+            gl.linkProgram(program);
+            gl.useProgram(program);
+            return program;
+        }
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.POINTS, 0, 1);
+        setInterval(() => {
+            if (flag) {
+                flag = false
+                gl.clear(gl.COLOR_BUFFER_BIT);
+            }else{
+                flag = true
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.POINTS, 0, 1);
+            }
+            
+        }, 1000);
+      
+    </script>
+</body>
+
+</html>

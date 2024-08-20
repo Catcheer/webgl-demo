@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制多个点</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="800" height="800"></canvas>
+
+    <!-- 具体路径配置，你根据自己文件目录设置，我的是课件中源码形式 -->
+    <script type="importmap">
+    {
+		"imports": {
+			"three": "./build/three.module.js"
+		}
+	}
+</script>
+    <script type="x-vertext/shader" id="x-vertext">
+        attribute vec4 a_Position;
+        uniform mat4 u_xformMatrix;
+            void main(){
+                gl_Position = u_xformMatrix*a_Position;
+                gl_PointSize = 2.0;
+            }
+    </script>
+    <script type="x-fragment/shader" id="x-fragment">
+        precision mediump float;
+        void main(){
+            gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { initShaders } from './js/util.js';
+        const myCanvas = document.querySelector('#myCanvas')
+        const gl = myCanvas.getContext('webgl');
+        initShaders(gl, '#x-vertext', '#x-fragment')
+        console.log(THREE.Scene)
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+        let k = 0;
+
+        function getArr() {
+            const arr = []
+            let y = 0.9
+            for (let j = 0; j < 16; j++) {
+                y = y - 0.1
+                let x = -0.9
+                for (let i = 0; i < 16; i++) {
+                    x = x + 0.1
+                    arr.push(x)
+                    arr.push(y + Math.sin(0.5 * i + k) * 0.1)
+                }
+            }
+            return arr
+        }
+
+        const list = getArr()
+
+        const vertices = new Float32Array([
+            ...list
+        ])
+
+        const n = list.length / 2;
+
+        const a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        const verticesBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
+        gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 8, 0);
+        gl.enableVertexAttribArray(a_Position);
+
+
+        // const matrix = new THREE.Matrix4();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        camera.position.set(0.2, 0.1, 0.3);
+        camera.rotateX(Math.PI/6);
+        camera.rotateY(Math.PI/6);
+        
+        camera.updateMatrix ()
+        console.log(camera)
+   
+
+        const u_xformMatrix = gl.getUniformLocation(gl.program, 'u_xformMatrix');
+        gl.uniformMatrix4fv(u_xformMatrix, false, camera.matrix.elements);
+
+        function render() {
+            k += 0.05
+            if(k > 2 * Math.PI){
+                k=0
+            }
+            
+            let newVertices = new Float32Array([
+                ...getArr()
+            ])
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.bufferData(gl.ARRAY_BUFFER, newVertices, gl.STATIC_DRAW);
+            gl.drawArrays(gl.POINTS, 0, n);
+            requestAnimationFrame(render)
+        }
+
+        render()
+
+
+    </script>
+</body>
+
+</html>

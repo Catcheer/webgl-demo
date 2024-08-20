@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鼠标点击绘制点</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+    <script type="x-shader/x-vertext" id="vertexShader">
+        attribute vec4 a_Position;
+        void main(){
+            gl_Position = a_Position;
+            gl_PointSize = 10.0;
+        }
+    </script>
+
+    <script type="x-fragment/v-fragment" id="fragmentShader">
+        precision mediump float;
+        uniform vec4 u_FragColor;
+        void main(){
+            gl_FragColor = vec4(u_FragColor);
+        }
+    </script>
+
+    <script>
+        const myCanvas = document.getElementById('canvas');
+        const gl = myCanvas.getContext('webgl')
+
+        const vshader = document.getElementById('vertexShader').innerText;
+        const fshader = document.getElementById('fragmentShader').innerText;
+
+        initShader(gl, vshader, fshader)
+
+        function initShader(gl, vshader, fshader) {
+
+            const vshaderObj = gl.createShader(gl.VERTEX_SHADER);
+            const fshaderObj = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(vshaderObj, vshader);
+            gl.shaderSource(fshaderObj, fshader);
+            gl.compileShader(vshaderObj);
+            gl.compileShader(fshaderObj);
+
+            const program = gl.createProgram();
+            gl.attachShader(program, vshaderObj);
+            gl.attachShader(program, fshaderObj);
+            gl.linkProgram(program);
+            gl.useProgram(program);
+            gl.program = program;
+            return program;
+        }
+
+        const arr = []
+        const colors = []
+        const a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        const u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+        // const list = new Float32Array(arr)
+        // const a_Position = gl.getAttribLocation(gl.program,'a_Position');
+        // const buffer = gl.createBuffer();
+        // gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+        // gl.bufferData(gl.ARRAY_BUFFER,list,gl.STATIC_DRAW)
+        // gl.vertexAttribPointer(a_Position,3,gl.FLOAT,false,0,0)
+        // gl.enableVertexAttribArray(a_Position)
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+
+
+
+
+        // myCanvas.addEventListener('click',(e)=>{
+        //     const {clientX,clientY}=e
+        //     const x = (clientX/myCanvas.width)*2-1
+        //     const y = -(clientY/myCanvas.height)*2+1
+        //     arr.push(x,y,0.0)
+        //     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.STATIC_DRAW)
+        //     gl.clear(gl.COLOR_BUFFER_BIT)
+        //     gl.drawArrays(gl.POINTS,0,arr.length/3)
+        // })
+
+
+        myCanvas.addEventListener('click', (e) => {
+            gl.clear(gl.COLOR_BUFFER_BIT)
+            const { clientX, clientY } = e
+            const x = (clientX / myCanvas.width) * 2 - 1
+            const y = -(clientY / myCanvas.height) * 2 + 1
+            collectColors(x, y)
+            arr.push([x, y, 0.0])
+            for (let i = 0; i < arr.length; i++) {
+                const rgba = colors[i]
+                gl.vertexAttrib3f(a_Position, arr[i][0], arr[i][1], arr[i][2])
+                gl.uniform4f(u_FragColor, rgba[0],rgba[1],rgba[2],rgba[3])
+                gl.drawArrays(gl.POINTS, 0, 1)
+            }
+
+        })
+
+
+        function collectColors(x, y) {
+            if (x > 0 && y > 0) {
+                colors.push([1.0, 0.0, 0.0, 1.0])
+            } else if (x < 0 && y > 0) {
+                colors.push([0.0, 1.0, 0.0, 1.0])
+            }else{
+                colors.push([0.0, 0.0, 1.0, 1.0])
+            }
+        }
+
+
+
+    </script>
+
+</body>
+
+</html>

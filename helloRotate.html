@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>helloRotate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            ;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+    <script type="x-shader/x-vertext" id="vertexShader">
+        // x1=x*cosb - y*sinb
+        // y1=x*sinb + y*cosb
+            attribute vec4 a_Position;
+            uniform float cosB,sinB;
+            void main(){
+                gl_Position.x = a_Position.x*cosB - a_Position.y*sinB;
+                gl_Position.y = a_Position.x*sinB+ a_Position.y*cosB;
+                gl_Position.z = a_Position.z;
+                gl_Position.w = 1.0;
+            }
+    </script>
+    <script type="x-fragment/v-fragment" id="fragmentShader">
+            precision mediump float;
+            uniform vec4 u_FragColor;
+            void main(){
+                gl_FragColor = vec4(u_FragColor);
+            }
+    </script>
+
+    <script>
+
+        const myCanvas = document.getElementById('canvas');
+        const gl = myCanvas.getContext('webgl')
+
+        const vshader = document.getElementById('vertexShader').innerText;
+        const fshader = document.getElementById('fragmentShader').innerText;
+
+        function initShader(gl, vshader, fshader) {
+            const vshaderObj = gl.createShader(gl.VERTEX_SHADER);
+            const fshaderObj = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(vshaderObj, vshader);
+            gl.shaderSource(fshaderObj, fshader);
+            gl.compileShader(vshaderObj);
+            gl.compileShader(fshaderObj);
+            const program = gl.createProgram();
+            gl.attachShader(program, vshaderObj);
+            gl.attachShader(program, fshaderObj);
+            gl.linkProgram(program);
+            gl.useProgram(program);
+            gl.program = program;
+            return program;
+        }
+        initShader(gl, vshader, fshader)
+        const gl_Position = gl.getAttribLocation(gl.program, 'a_Position');
+       
+       
+        const u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+        const u_CosB = gl.getUniformLocation(gl.program, 'cosB');
+        const u_SinB = gl.getUniformLocation(gl.program, 'sinB');
+        gl.uniform4f(u_FragColor, 1.0, 0.0, 0.0, 1.0);
+
+        let angle =45;
+        radian = angle * Math.PI / 180;
+        gl.uniform1f(u_CosB, Math.cos(radian));
+        gl.uniform1f(u_SinB, Math.sin(radian));
+
+
+     
+
+        const vers = new Float32Array([
+           0.0,0.0,
+           0.0,0.5,
+           0.5,0.5,
+           0.5,0.0
+
+        ])
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+        gl.bufferData(gl.ARRAY_BUFFER, vers, gl.STATIC_DRAW)
+        gl.vertexAttribPointer(gl_Position, 2, gl.FLOAT, false, 0, 0)
+        gl.enableVertexAttribArray(gl_Position)
+
+        function render() {
+           
+            gl.clearColor(0.0, 0.0, 0.0, 1.0)
+            gl.clear(gl.COLOR_BUFFER_BIT)
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, 4)
+            requestAnimationFrame(render)
+        }
+
+
+        render()
+    </script>
+
+</body>
+
+</html>

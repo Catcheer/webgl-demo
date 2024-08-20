@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>triangle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            ;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+    <script type="x-shader/x-vertext" id="vertexShader">
+            attribute vec4 a_Position;
+            uniform vec4 u_Translation;
+            void main(){
+                gl_Position = a_Position + u_Translation;
+            }
+    </script>
+    <script type="x-fragment/v-fragment" id="fragmentShader">
+            precision mediump float;
+            uniform vec4 u_FragColor;
+            void main(){
+                gl_FragColor = vec4(u_FragColor);
+            }
+    </script>
+
+    <script>
+
+        const myCanvas = document.getElementById('canvas');
+        const gl = myCanvas.getContext('webgl')
+
+        const vshader = document.getElementById('vertexShader').innerText;
+        const fshader = document.getElementById('fragmentShader').innerText;
+
+        function initShader(gl, vshader, fshader) {
+            const vshaderObj = gl.createShader(gl.VERTEX_SHADER);
+            const fshaderObj = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(vshaderObj, vshader);
+            gl.shaderSource(fshaderObj, fshader);
+            gl.compileShader(vshaderObj);
+            gl.compileShader(fshaderObj);
+            const program = gl.createProgram();
+            gl.attachShader(program, vshaderObj);
+            gl.attachShader(program, fshaderObj);
+            gl.linkProgram(program);
+            gl.useProgram(program);
+            gl.program = program;
+            return program;
+        }
+        initShader(gl, vshader, fshader)
+        const gl_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        const u_Translation = gl.getUniformLocation(gl.program, 'u_Translation');
+       
+        const u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+        gl.uniform4f(u_FragColor, 1.0, 0.0, 0.0, 1.0);
+
+
+        let n = 6;
+        let arr = [0.0, 0.0]
+        for (let i = 0; i <= n; i++) {
+            const angle = i * Math.PI * 2 / n;
+            arr.push(0.3 * Math.cos(angle), 0.3 * Math.sin(angle))
+        }
+        // arr.push(0.0,0.0)
+
+        const vers = new Float32Array(arr)
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+        gl.bufferData(gl.ARRAY_BUFFER, vers, gl.STATIC_DRAW)
+        gl.vertexAttribPointer(gl_Position, 2, gl.FLOAT, false, 0, 0)
+        gl.enableVertexAttribArray(gl_Position)
+
+        let tx= 0.0,ty=0.0;
+        let tFlag = 0.01
+        function render() {
+            tx+=tFlag
+            ty+=tFlag
+            if(tx>0.5||tx<-0.5){
+                tFlag*=-1
+            }
+            gl.uniform4f(u_Translation, tx, ty, 0.0, 0.0);
+            gl.clearColor(0.0, 0.0, 0.0, 1.0)
+            gl.clear(gl.COLOR_BUFFER_BIT)
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, 8)
+            requestAnimationFrame(render)
+        }
+
+
+        render()
+    </script>
+
+</body>
+
+</html>

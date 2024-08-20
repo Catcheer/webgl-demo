@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>helloPoint2</title>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="600" height="600"></canvas>
+
+    <script type="x-shader/x-vertext" id="vertexShader">
+        attribute vec4 a_Position;
+        void main(){
+           
+            gl_Position = a_Position;
+            gl_PointSize = 20.0;
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="fragmentShader">
+        void main(){
+            gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+        }
+    </script>
+    <script>
+        let flag =true 
+        let x =0.5;
+        const myCanvas = document.querySelector('#myCanvas')
+        const gl = myCanvas.getContext('webgl');
+
+        const vertexShader = document.querySelector('#vertexShader').innerText;
+        const fragmentShader = document.querySelector('#fragmentShader').innerText;
+        const program = initShaders(gl, vertexShader, fragmentShader);
+
+        //获取attribute变量的存储位置
+
+        const a_Position = gl.getAttribLocation(program,'a_Position');
+        //将顶点位置传给变量
+        gl.vertexAttrib3f(a_Position, x, 0.0, 0.0);
+       
+
+
+        function initShaders(gl, vs, fs) {
+            const program = gl.createProgram();
+            const verObj = gl.createShader(gl.VERTEX_SHADER);
+            const frageObj = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(verObj, vs);
+            gl.shaderSource(frageObj, fs);
+            gl.compileShader(verObj);
+            gl.compileShader(frageObj);
+            gl.attachShader(program, verObj);
+            gl.attachShader(program, frageObj);
+            gl.linkProgram(program);
+            gl.useProgram(program);
+            return program;
+        }
+
+      function draw(){
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.POINTS, 0, 1);
+        setInterval(() => {
+            if (flag) {
+                flag = false
+                gl.clear(gl.COLOR_BUFFER_BIT);
+            }else{
+                flag = true
+              
+                gl.vertexAttrib3f(a_Position, x, 0.0, 0.0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.POINTS, 0, 1);
+            }
+            
+        }, 300);
+      }
+      draw()
+    </script>
+</body>
+
+</html>

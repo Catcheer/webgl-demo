@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>canvas绘制矩形</title>
+</head>
+<body>
+
+    <canvas id="myCanvas" width="600" height="400"></canvas>
+    <script>
+        const myCanvas = document.querySelector('#myCanvas')
+        const ctx = myCanvas.getContext('2d');
+        ctx.beginPath();
+        ctx.fillStyle = 'red';
+        ctx.fillRect(0, 0, 600, 600);
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.fillStyle = 'blue';
+        ctx.strokeStyle = 'blue';
+        ctx.moveTo(0, 0);
+        ctx.lineTo(200,200)
+        ctx.lineTo(0, 200)
+        ctx.stroke();
+        // ctx.fill();
+        ctx.closePath();
+    </script>
+</body>
+</html>
